@@ -12,7 +12,7 @@ const appStore = useAppStore()
 
 const isScrolled = inject<ReturnType<typeof ref<boolean>>>('isScrolled', ref(false))
 
-const siteFavicon = '/images/doraemon/doraemon.svg'
+const siteFavicon = '/assets/images/doraemon/doraemon.svg'
 
 const actionButtons = computed(() => {
   const nextThemeTitle = appStore.isDark ? '切换到晴空模式' : '切换到夜空充电模式'
