@@ -14,7 +14,8 @@ const TRAFFIC_LIMIT_REGEX = /^([\d.]+)\s*(B|KB|KIB|MB|MIB|GB|GIB|TB|TIB)?$/i
 const MONTH_CYCLE_REGEX = /^\d+m$/
 const DETAIL_ROUTE_REGEX = /^#\/server\/([^/?#]+)/
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
-const CURRENCY_SYMBOL_REGEX = /^(¥|￥|\$|HK\$|€|£|₽|₣|₹|₫|฿|CA\$)$/
+const MONTH_SUFFIX_REGEX = /m$/
+const CURRENCY_SYMBOL_REGEX = /^(?:¥|￥|\$|HK\$|€|£|₽|₣|₹|₫|฿|CA\$)$/
 
 export interface HubMetrics {
   uptime?: number
@@ -241,7 +242,9 @@ function num(value: unknown, fallback = 0): number {
   const n = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(n) ? n : fallback
 }
-function str(value: unknown): string { return typeof value === 'string' ? value : '' }
+function str(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
 function parseLoad(value: unknown): number[] {
   if (Array.isArray(value)) return value.map(v => num(v))
   return str(value).trim().split(/[,\s]+/).filter(Boolean).map(v => num(v))
@@ -264,7 +267,7 @@ function parseGpu(value: unknown): HubMetrics['gpu_info'] {
 }
 function parseTrafficLimit(value: unknown): number {
   if (typeof value === 'number') return value
-  const raw = str(value).trim().replace(/,/g, '')
+  const raw = str(value).trim().replace(COMMA_REGEX, '')
   const match = raw.match(/^([\d.]+)\s*(B|KB|KIB|MB|MIB|GB|GIB|TB|TIB)?$/i)
   if (!match) return 0
   const n = Number(match[1])
@@ -397,16 +400,17 @@ async function acquireHistorySlot(signal?: AbortSignal): Promise<void> {
     return
   }
   await new Promise<void>((resolve, reject) => {
-    const abort = () => {
-      const i = historyWaiters.indexOf(grant)
-      if (i >= 0)
-        historyWaiters.splice(i, 1)
-      reject(signal?.reason)
-    }
+    let abort: () => void
     const grant = () => {
       signal?.removeEventListener('abort', abort)
       historyActive++
       resolve()
+    }
+    abort = () => {
+      const i = historyWaiters.indexOf(grant)
+      if (i >= 0)
+        historyWaiters.splice(i, 1)
+      reject(signal?.reason)
     }
     historyWaiters.push(grant)
     signal?.addEventListener('abort', abort, { once: true })
@@ -538,7 +542,7 @@ export function currencySymbol(code: string | undefined): string {
 const MONTH_CYCLE: Record<string, number> = { monthly: 1, quarterly: 3, semiannual: 6, yearly: 12, biennial: 24, triennial: 36 }
 export function billingCycleDays(cycle: string | undefined): number {
   if (cycle === 'once') return -1
-  const months = MONTH_CYCLE[cycle || 'monthly'] ?? (Number((cycle || '').replace(/m$/, '')) || 1)
+  const months = MONTH_CYCLE[cycle || 'monthly'] ?? (Number((cycle || '').replace(MONTH_SUFFIX_REGEX, '')) || 1)
   return Math.round(months * 30.4375)
 }
 function expiryMoment(node: HubNode): string {
