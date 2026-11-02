@@ -78,7 +78,7 @@ onUnmounted(() => {
 <template>
   <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-md">
     <section class="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 text-center text-slate-900 shadow-2xl">
-      <img src="/images/doraemon/doraemon.svg" alt="" class="mx-auto mb-3 h-20 w-20">
+      <img  :src="'/assets/images/doraemon/doraemon.svg'" alt="" class="mx-auto mb-3 h-20 w-20">
       <h2 class="text-xl font-bold">任意门安全验证</h2>
       <p class="mt-2 text-sm text-slate-600">
         此站点启用了 Cloudflare Turnstile。完成验证后，哆啦A梦监控面板即可连接服务器。
