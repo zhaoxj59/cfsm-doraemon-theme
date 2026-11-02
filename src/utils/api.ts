@@ -28,7 +28,8 @@ export class ApiError extends Error {
   }
 }
 function toApiError(error: unknown): unknown {
-  if (error instanceof HubError) return new ApiError(error.status, error.message)
+  if (error instanceof HubError)
+    return new ApiError(error.status, error.message)
   return error
 }
 export class HubApi {
@@ -43,18 +44,22 @@ export class HubApi {
     }
     return this.configPromise
   }
+
   async getMe(): Promise<MeInfo> {
     try {
       const config = await this.config()
       return { logged_in: config.authed === true, username: config.authed ? '站长' : '' }
-    } catch (error) {
+    }
+    catch (error) {
       throw toApiError(error)
     }
   }
+
   async refreshConfigAfterTurnstile(): Promise<void> {
     this.configPromise = null
     await this.config()
   }
+
   async getPublicSettings(): Promise<PublicSettings> {
     try {
       const [config, themeSettings] = await Promise.all([this.config(), loadThemeConfig()])
@@ -70,13 +75,15 @@ export class HubApi {
         turnstile_site_key: config.turnstile_site_key || '',
         turnstile_verified: Boolean(config.turnstile_verified) || hasTurnstileCredential(),
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw toApiError(error)
     }
   }
 }
 let sharedRpc: HubApi | null = null
 export function getSharedApi(): HubApi {
-  if (!sharedRpc) sharedRpc = new HubApi()
+  if (!sharedRpc)
+    sharedRpc = new HubApi()
   return sharedRpc
 }
