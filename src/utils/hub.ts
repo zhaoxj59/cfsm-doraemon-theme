@@ -175,7 +175,8 @@ function authHeaders(): Record<string, string> {
   try {
     const token = localStorage.getItem('jwt_token')
     return token ? { Authorization: `Bearer ${token}` } : {}
-  } catch {
+  }
+  catch {
     return {}
   }
 }
