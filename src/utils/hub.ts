@@ -347,7 +347,8 @@ let activeDetailId = ''
 
 function currentDetailId(): string {
   const match = location.hash.match(/^#\/server\/([^/?#]+)/)
-  return match ? decodeURIComponent(match[1]) : ''
+  const id = match?.[1]
+  return id ? decodeURIComponent(id) : ''
 }
 
 export async function fetchNodes(signal?: AbortSignal): Promise<HubSnapshot> {
