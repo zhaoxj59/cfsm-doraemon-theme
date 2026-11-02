@@ -1,5 +1,5 @@
-import { fileURLToPath, URL } from 'node:url'
 import process from 'node:process'
+import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -50,9 +50,9 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          echarts: ['echarts', 'vue-echarts'],
+          'echarts': ['echarts', 'vue-echarts'],
           'reka-ui': ['reka-ui'],
-          vueuse: ['@vueuse/core'],
+          'vueuse': ['@vueuse/core'],
           'v3-services': [
             './src/services/history.service.ts',
             './src/services/metrics.service.ts',
