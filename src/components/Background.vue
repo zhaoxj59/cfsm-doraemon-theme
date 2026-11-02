@@ -355,7 +355,7 @@ onUnmounted(() => {
 .dora-cloud {
   display: block;
   aspect-ratio: 200 / 104;
-  background: url('/images/doraemon/cloud.svg') center / contain no-repeat;
+  background: url('/assets/images/doraemon/cloud.svg') center / contain no-repeat;
   filter: drop-shadow(0 8px 0 rgb(0 90 150 / 0.1));
   animation: dora-cloud-drift 40s ease-in-out infinite alternate;
 }
@@ -408,7 +408,7 @@ onUnmounted(() => {
   display: block;
   width: 100%;
   height: 100%;
-  background: url('/images/doraemon/doraemon-fly.svg') center / contain no-repeat;
+  background: url('/assets/images/doraemon/doraemon-fly.svg') center / contain no-repeat;
   filter: drop-shadow(0 10px 8px rgb(0 60 110 / 0.25));
   animation: dora-flyer-bob 2.6s ease-in-out infinite;
 }
