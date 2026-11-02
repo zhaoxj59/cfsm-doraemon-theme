@@ -43,6 +43,7 @@ CFSM 只代理主题根目录的 `index.html` 与 `assets/`。请将 `dist/` **�
    `https://github.com/<你的用户名>/cfsm-doraemon-theme/tree/build`
 
    也可以改用某个固定 commit SHA 锁定版本。
+
 5. 保存后访问首页。详情页使用 `/#/server/<server-id>`。
 
 ## 适配说明
