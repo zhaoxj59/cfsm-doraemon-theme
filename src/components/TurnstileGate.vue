@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { provideTurnstileToken } from '@/utils/turnstile'
 import { useAppStore } from '@/stores/app'
+import { provideTurnstileToken } from '@/utils/turnstile'
 
 declare global {
   interface Window {
@@ -28,9 +28,9 @@ function renderWidget(): void {
     return
   }
   widgetId = window.turnstile.render(container.value, {
-    sitekey: siteKey,
-    theme: 'auto',
-    callback: (token: string) => {
+    'sitekey': siteKey,
+    'theme': 'auto',
+    'callback': (token: string) => {
       completed.value = true
       error.value = ''
       provideTurnstileToken(token)
@@ -81,17 +81,25 @@ onUnmounted(() => {
 <template>
   <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-md">
     <section class="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 text-center text-slate-900 shadow-2xl">
-      <img  :src="'/assets/images/doraemon/doraemon.svg'" alt="" class="mx-auto mb-3 h-20 w-20">
-      <h2 class="text-xl font-bold">任意门安全验证</h2>
+      <img src="/assets/images/doraemon/doraemon.svg" alt="" class="mx-auto mb-3 h-20 w-20">
+      <h2 class="text-xl font-bold">
+        任意门安全验证
+      </h2>
       <p class="mt-2 text-sm text-slate-600">
         此站点启用了 Cloudflare Turnstile。完成验证后，哆啦A梦监控面板即可连接服务器。
       </p>
       <div class="my-5 flex justify-center">
         <div ref="container" />
       </div>
-      <p v-if="completed" class="text-sm font-medium text-emerald-700">验证成功，正在连接监控服务…</p>
-      <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
-      <p v-else class="text-xs text-slate-500">请完成上方安全验证</p>
+      <p v-if="completed" class="text-sm font-medium text-emerald-700">
+        验证成功，正在连接监控服务…
+      </p>
+      <p v-else-if="error" class="text-sm text-red-600">
+        {{ error }}
+      </p>
+      <p v-else class="text-xs text-slate-500">
+        请完成上方安全验证
+      </p>
     </section>
   </div>
 </template>
