@@ -14,22 +14,26 @@ function readStoredCredential(): string {
     if (savedAt && Date.now() - savedAt < 55 * 60 * 1000) {
       verifiedCredential = localStorage.getItem('cfsm_turnstile_verified') || ''
       verifiedCredentialAt = savedAt
-    } else {
+    }
+    else {
       localStorage.removeItem('cfsm_turnstile_verified')
       localStorage.removeItem('cfsm_turnstile_verified_at')
     }
-  } catch {}
+  }
+  catch {}
   return verifiedCredential
 }
 
 export function getTurnstileHeaders(): Record<string, string> {
   const verified = readStoredCredential()
-  if (verified) return { 'X-Turnstile-Verified': verified }
+  if (verified)
+    return { 'X-Turnstile-Verified': verified }
   return oneTimeToken ? { 'X-Turnstile-Token': oneTimeToken } : {}
 }
 
 export function waitForTurnstileToken(): Promise<string> {
-  if (oneTimeToken) return Promise.resolve(oneTimeToken)
+  if (oneTimeToken)
+    return Promise.resolve(oneTimeToken)
   if (!tokenPromise) {
     tokenPromise = new Promise<string>((resolve) => {
       resolveToken = resolve
@@ -39,7 +43,8 @@ export function waitForTurnstileToken(): Promise<string> {
 }
 
 export function provideTurnstileToken(token: string): void {
-  if (!token) return
+  if (!token)
+    return
   oneTimeToken = token
   resolveToken?.(token)
   resolveToken = null
@@ -47,14 +52,16 @@ export function provideTurnstileToken(token: string): void {
 }
 
 export function setVerifiedCredential(value: unknown): void {
-  if (typeof value !== 'string' || !value) return
+  if (typeof value !== 'string' || !value)
+    return
   verifiedCredential = value
   verifiedCredentialAt = Date.now()
   oneTimeToken = ''
   try {
     localStorage.setItem('cfsm_turnstile_verified', value)
     localStorage.setItem('cfsm_turnstile_verified_at', String(Date.now()))
-  } catch {}
+  }
+  catch {}
 }
 
 export function clearTurnstileCredential(): void {
@@ -64,7 +71,8 @@ export function clearTurnstileCredential(): void {
   try {
     localStorage.removeItem('cfsm_turnstile_verified')
     localStorage.removeItem('cfsm_turnstile_verified_at')
-  } catch {}
+  }
+  catch {}
 }
 
 export function hasTurnstileCredential(): boolean {
