@@ -247,7 +247,7 @@ function str(value: unknown): string {
 }
 function parseLoad(value: unknown): number[] {
   if (Array.isArray(value)) return value.map(v => num(v))
-  return str(value).trim().split(/[,\s]+/).filter(Boolean).map(v => num(v))
+  return str(value).trim().split(LOAD_SEPARATOR_REGEX).filter(Boolean).map(v => num(v))
 }
 function parseGpu(value: unknown): HubMetrics['gpu_info'] {
   if (typeof value === 'string') {
@@ -268,7 +268,7 @@ function parseGpu(value: unknown): HubMetrics['gpu_info'] {
 function parseTrafficLimit(value: unknown): number {
   if (typeof value === 'number') return value
   const raw = str(value).trim().replace(COMMA_REGEX, '')
-  const match = raw.match(/^([\d.]+)\s*(B|KB|KIB|MB|MIB|GB|GIB|TB|TIB)?$/i)
+  const match = raw.match(TRAFFIC_LIMIT_REGEX)
   if (!match) return 0
   const n = Number(match[1])
   const unit = (match[2] || 'B').toUpperCase()
@@ -282,7 +282,7 @@ function billingCycle(value: unknown): string {
     halfyear: 'semiannual', semiannual: 'semiannual', year: 'yearly', yearly: 'yearly',
     annual: 'yearly', once: 'once', lifetime: 'once',
   }
-  return map[v] || (/^\d+m$/.test(v) ? v : 'monthly')
+  return map[v] || (MONTH_CYCLE_REGEX.test(v) ? v : 'monthly')
 }
 function online(server: CfsmServer): boolean {
   if (typeof server.is_online === 'boolean') return server.is_online
@@ -368,7 +368,7 @@ let activeServerIds: string[] = []
 let activeDetailId = ''
 
 function currentDetailId(): string {
-  const match = location.hash.match(/^#\/server\/([^/?#]+)/)
+  const match = location.hash.match(DETAIL_ROUTE_REGEX)
   const id = match?.[1]
   return id ? decodeURIComponent(id) : ''
 }
@@ -536,7 +536,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 export function currencySymbol(code: string | undefined): string {
   const cc = (code ?? '').trim().toUpperCase()
   if (!cc) return '¥'
-  if (/^(¥|￥|\$|HK\$|€|£|₽|₣|₹|₫|฿|CA\$)$/.test(code ?? '')) return code!
+  if (CURRENCY_SYMBOL_REGEX.test(code ?? '')) return code!
   return CURRENCY_SYMBOL[cc] ?? `${cc} `
 }
 const MONTH_CYCLE: Record<string, number> = { monthly: 1, quarterly: 3, semiannual: 6, yearly: 12, biennial: 24, triennial: 36 }
@@ -548,7 +548,7 @@ export function billingCycleDays(cycle: string | undefined): number {
 function expiryMoment(node: HubNode): string {
   if (!node.expires_at) return ''
   const date = str(node.expires_at)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return ''
+  if (!DATE_ONLY_REGEX.test(date)) return ''
   return new Date(`${date}T23:59:59`).toISOString()
 }
 
