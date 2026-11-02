@@ -8,6 +8,14 @@ import type { Client, NodeStatus } from '@/utils/rpc'
 import manifest from '../../theme.json'
 import { getTurnstileHeaders, setVerifiedCredential } from '@/utils/turnstile'
 
+const LOAD_SEPARATOR_REGEX = /[,\s]+/
+const COMMA_REGEX = /,/g
+const TRAFFIC_LIMIT_REGEX = /^([\d.]+)\s*(B|KB|KIB|MB|MIB|GB|GIB|TB|TIB)?$/i
+const MONTH_CYCLE_REGEX = /^\d+m$/
+const DETAIL_ROUTE_REGEX = /^#\/server\/([^/?#]+)/
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
+const CURRENCY_SYMBOL_REGEX = /^(¥|￥|\$|HK\$|€|£|₽|₣|₹|₫|฿|CA\$)$/
+
 export interface HubMetrics {
   uptime?: number
   cpu?: number
@@ -150,9 +158,15 @@ interface CfsmConfig extends Record<string, any> {
 
 async function readError(res: Response): Promise<HubError> {
   let body = ''
-  try { body = (await res.text()).trim() } catch {}
+  try {
+    body = (await res.text()).trim()
+  }
+  catch {}
   let message = body
-  try { message = JSON.parse(body)?.error || JSON.parse(body)?.message || body } catch {}
+  try {
+    message = JSON.parse(body)?.error || JSON.parse(body)?.message || body
+  }
+  catch {}
   return new HubError(res.status, message || `HTTP ${res.status}`)
 }
 
@@ -234,7 +248,12 @@ function parseLoad(value: unknown): number[] {
 }
 function parseGpu(value: unknown): HubMetrics['gpu_info'] {
   if (typeof value === 'string') {
-    try { value = JSON.parse(value) } catch { return [] }
+    try {
+      value = JSON.parse(value)
+    }
+    catch {
+      return []
+    }
   }
   if (!Array.isArray(value)) return []
   return value.map((item: any) => ({
@@ -373,19 +392,37 @@ const HISTORY_RETRIES = 3
 let historyActive = 0
 const historyWaiters: Array<() => void> = []
 async function acquireHistorySlot(signal?: AbortSignal): Promise<void> {
-  if (historyActive < HISTORY_CONCURRENCY) { historyActive++; return }
+  if (historyActive < HISTORY_CONCURRENCY) {
+    historyActive++
+    return
+  }
   await new Promise<void>((resolve, reject) => {
-    const grant = () => { signal?.removeEventListener('abort', abort); historyActive++; resolve() }
-    const abort = () => { const i = historyWaiters.indexOf(grant); if (i >= 0) historyWaiters.splice(i, 1); reject(signal?.reason) }
+    const abort = () => {
+      const i = historyWaiters.indexOf(grant)
+      if (i >= 0)
+        historyWaiters.splice(i, 1)
+      reject(signal?.reason)
+    }
+    const grant = () => {
+      signal?.removeEventListener('abort', abort)
+      historyActive++
+      resolve()
+    }
     historyWaiters.push(grant)
     signal?.addEventListener('abort', abort, { once: true })
   })
 }
-function releaseHistorySlot(): void { historyActive = Math.max(0, historyActive - 1); historyWaiters.shift()?.() }
+function releaseHistorySlot(): void {
+  historyActive = Math.max(0, historyActive - 1)
+  historyWaiters.shift()?.()
+}
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(resolve, ms)
-    signal?.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason) }, { once: true })
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer)
+      reject(signal.reason)
+    }, { once: true })
   })
 }
 const historyCache = new Map<string, { at: number, promise: Promise<HubHistory> }>()
@@ -448,8 +485,12 @@ export function fetchNodeHistory(id: string | number, query: HistoryQuery, signa
     for (let attempt = 0; ; attempt++) {
       await acquireHistorySlot(signal)
       let res: Response
-      try { res = await fetch(url, { credentials: 'same-origin', signal, headers: { accept: 'application/json', ...authHeaders(), ...getTurnstileHeaders() } }) }
-      finally { releaseHistorySlot() }
+      try {
+        res = await fetch(url, { credentials: 'same-origin', signal, headers: { accept: 'application/json', ...authHeaders(), ...getTurnstileHeaders() } })
+      }
+      finally {
+        releaseHistorySlot()
+      }
       if (res.status === 503 && attempt < HISTORY_RETRIES) {
         await delay(350 * 2 ** attempt, signal)
         continue
@@ -460,7 +501,10 @@ export function fetchNodeHistory(id: string | number, query: HistoryQuery, signa
     }
   })()
   historyCache.set(url, { at: Date.now(), promise })
-  promise.catch(() => { if (historyCache.get(url)?.promise === promise) historyCache.delete(url) })
+  promise.catch(() => {
+    if (historyCache.get(url)?.promise === promise)
+      historyCache.delete(url)
+  })
   return promise
 }
 
