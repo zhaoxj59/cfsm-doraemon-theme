@@ -267,7 +267,7 @@ onMounted(async () => {
   display: inline-block;
   width: 0.72rem;
   height: 1.05rem;
-  background: url('/assets/images/doraemon/door.svg') center / contain no-repeat;
+  background: url('/images/doraemon/door.svg') center / contain no-repeat;
 }
 
 .door-map__heading small {
