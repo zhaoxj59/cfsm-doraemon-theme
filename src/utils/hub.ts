@@ -5,8 +5,8 @@
  * translates CFSM REST/WebSocket payloads into that model.
  */
 import type { Client, NodeStatus } from '@/utils/rpc'
-import manifest from '../../theme.json'
 import { getTurnstileHeaders, setVerifiedCredential } from '@/utils/turnstile'
+import manifest from '../../theme.json'
 
 const LOAD_SEPARATOR_REGEX = /[,\s]+/
 const COMMA_REGEX = /,/g
@@ -15,7 +15,7 @@ const MONTH_CYCLE_REGEX = /^\d+m$/
 const DETAIL_ROUTE_REGEX = /^#\/server\/([^/?#]+)/
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
 const MONTH_SUFFIX_REGEX = /m$/
-const CURRENCY_SYMBOL_REGEX = /^(?:¥|￥|\$|HK\$|€|£|₽|₣|₹|₫|฿|CA\$)$/
+const CURRENCY_SYMBOL_REGEX = /^(?:[¥￥$€£₽₣₹₫฿]|HK\$|CA\$)$/
 
 export interface HubMetrics {
   uptime?: number
