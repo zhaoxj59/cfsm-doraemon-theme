@@ -70,7 +70,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (widgetId && window.turnstile) {
-    try { window.turnstile.remove(widgetId) } catch {}
+    try {
+      window.turnstile.remove(widgetId)
+    }
+    catch {}
   }
 })
 </script>
