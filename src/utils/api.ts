@@ -36,7 +36,9 @@ export class HubApi {
   private config() {
     if (!this.configPromise) {
       this.configPromise = fetchMe().finally(() => {
-        setTimeout(() => { this.configPromise = null }, 1000)
+        setTimeout(() => {
+          this.configPromise = null
+        }, 1000)
       })
     }
     return this.configPromise
