@@ -14,6 +14,7 @@ declare global {
 }
 
 const appStore = useAppStore()
+const doraemonImage = '/assets/images/doraemon/doraemon.svg'
 const container = ref<HTMLElement | null>(null)
 const error = ref('')
 const completed = ref(false)
@@ -81,7 +82,7 @@ onUnmounted(() => {
 <template>
   <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-md">
     <section class="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 text-center text-slate-900 shadow-2xl">
-      <img src="/assets/images/doraemon/doraemon.svg" alt="" class="mx-auto mb-3 h-20 w-20">
+      <img :src="doraemonImage" alt="" class="mx-auto mb-3 h-20 w-20">
       <h2 class="text-xl font-bold">
         任意门安全验证
       </h2>
