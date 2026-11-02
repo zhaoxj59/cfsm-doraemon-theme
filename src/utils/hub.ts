@@ -186,14 +186,16 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
     signal,
     headers: { accept: 'application/json', ...authHeaders(), ...getTurnstileHeaders() },
   })
-  if (!res.ok) throw await readError(res)
+  if (!res.ok)
+    throw await readError(res)
   return await res.json() as T
 }
 
 let siteConfigCache: { at: number, value: CfsmConfig } | null = null
 export async function fetchMe(signal?: AbortSignal): Promise<HubMe> {
   const config = await getJson<CfsmConfig>('/api/config', signal)
-  if (config.turnstile_verified) setVerifiedCredential(config.turnstile_verified)
+  if (config.turnstile_verified)
+    setVerifiedCredential(config.turnstile_verified)
   siteConfigCache = { at: Date.now(), value: config }
   return {
     authed: config.authorization === true,
@@ -205,7 +207,7 @@ export async function fetchMe(signal?: AbortSignal): Promise<HubMe> {
   }
 }
 
-type ConfigField = { key?: string, type: string, default?: unknown, options?: Array<{ value: string }>, min?: number, max?: number }
+interface ConfigField { key?: string, type: string, default?: unknown, options?: Array<{ value: string }>, min?: number, max?: number }
 const configFields = ((manifest as any).config as ConfigField[]).filter(
   (field): field is ConfigField & { key: string } => field?.type !== 'title' && typeof field?.key === 'string',
 )
@@ -228,7 +230,8 @@ export async function loadThemeConfig(): Promise<Record<string, unknown>> {
     if (config.theme_options && typeof config.theme_options === 'object' && !Array.isArray(config.theme_options))
       saved = config.theme_options
     siteConfigCache = { at: Date.now(), value: config }
-  } catch {
+  }
+  catch {
     if (siteConfigCache && Date.now() - siteConfigCache.at < 60_000)
       saved = siteConfigCache.value.theme_options ?? {}
   }
@@ -246,7 +249,8 @@ function str(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 function parseLoad(value: unknown): number[] {
-  if (Array.isArray(value)) return value.map(v => num(v))
+  if (Array.isArray(value))
+    return value.map(v => num(v))
   return str(value).trim().split(LOAD_SEPARATOR_REGEX).filter(Boolean).map(v => num(v))
 }
 function parseGpu(value: unknown): HubMetrics['gpu_info'] {
@@ -258,7 +262,8 @@ function parseGpu(value: unknown): HubMetrics['gpu_info'] {
       return []
     }
   }
-  if (!Array.isArray(value)) return []
+  if (!Array.isArray(value))
+    return []
   return value.map((item: any) => ({
     id: String(item?.id ?? ''),
     name: str(item?.name),
@@ -266,10 +271,12 @@ function parseGpu(value: unknown): HubMetrics['gpu_info'] {
   }))
 }
 function parseTrafficLimit(value: unknown): number {
-  if (typeof value === 'number') return value
+  if (typeof value === 'number')
+    return value
   const raw = str(value).trim().replace(COMMA_REGEX, '')
   const match = raw.match(TRAFFIC_LIMIT_REGEX)
-  if (!match) return 0
+  if (!match)
+    return 0
   const n = Number(match[1])
   const unit = (match[2] || 'B').toUpperCase()
   const power = unit.startsWith('T') ? 4 : unit.startsWith('G') ? 3 : unit.startsWith('M') ? 2 : unit.startsWith('K') ? 1 : 0
@@ -278,14 +285,23 @@ function parseTrafficLimit(value: unknown): number {
 function billingCycle(value: unknown): string {
   const v = str(value).toLowerCase()
   const map: Record<string, string> = {
-    month: 'monthly', monthly: 'monthly', quarter: 'quarterly', quarterly: 'quarterly',
-    halfyear: 'semiannual', semiannual: 'semiannual', year: 'yearly', yearly: 'yearly',
-    annual: 'yearly', once: 'once', lifetime: 'once',
+    month: 'monthly',
+    monthly: 'monthly',
+    quarter: 'quarterly',
+    quarterly: 'quarterly',
+    halfyear: 'semiannual',
+    semiannual: 'semiannual',
+    year: 'yearly',
+    yearly: 'yearly',
+    annual: 'yearly',
+    once: 'once',
+    lifetime: 'once',
   }
   return map[v] || (MONTH_CYCLE_REGEX.test(v) ? v : 'monthly')
 }
 function online(server: CfsmServer): boolean {
-  if (typeof server.is_online === 'boolean') return server.is_online
+  if (typeof server.is_online === 'boolean')
+    return server.is_online
   // `timestamp` is the server-record creation time, not the last report.
   const stamp = num(server.last_updated)
   return stamp > 0 && Date.now() - stamp <= 300_000
@@ -299,8 +315,10 @@ function cfsmToHub(server: CfsmServer): HubNode {
   for (const [i, key] of pingKeys.entries()) {
     const p = server[`ping_${key}`]
     const l = server[`loss_${key}`]
-    if (p !== undefined) ping[String(i + 1)] = p === false ? false : p === null ? null : num(p)
-    if (l !== undefined) loss[String(i + 1)] = l === false ? false : l === null ? null : num(l)
+    if (p !== undefined)
+      ping[String(i + 1)] = p === false ? false : p === null ? null : num(p)
+    if (l !== undefined)
+      loss[String(i + 1)] = l === false ? false : l === null ? null : num(l)
   }
   const gpu = parseGpu(server.gpu_info)
   const boot = num(server.boot_time)
@@ -443,14 +461,21 @@ function historyFromRows(rows: any[]): HubHistory {
   const metrics: HubMetricRow[] = []
   const ping: HubPingRow[] = []
   const probes: Record<string, string> = {
-    '1': '电信', '2': '联通', '3': '移动', '4': 'BGP',
-    '5': 'Node 1', '6': 'Node 2', '7': 'Node 3', '8': 'Node 4',
+    1: '电信',
+    2: '联通',
+    3: '移动',
+    4: 'BGP',
+    5: 'Node 1',
+    6: 'Node 2',
+    7: 'Node 3',
+    8: 'Node 4',
   }
   const lossValues: Record<string, number[]> = {}
   const keys = ['ct', 'cu', 'cm', 'bd', 'node_1', 'node_2', 'node_3', 'node_4']
   for (const row of rows) {
     const ts = toSeconds(row.timestamp ?? row.ts)
-    if (!ts) continue
+    if (!ts)
+      continue
     metrics.push({
       ts,
       cpu: num(row.cpu),
@@ -474,7 +499,8 @@ function historyFromRows(rows: any[]): HubHistory {
   }
   const loss: Record<string, number> = {}
   for (const [id, values] of Object.entries(lossValues)) {
-    if (values.length) loss[id] = values.reduce((sum, value) => sum + value, 0) / values.length
+    if (values.length)
+      loss[id] = values.reduce((sum, value) => sum + value, 0) / values.length
   }
   return { metrics, ping, probes, loss }
 }
@@ -484,7 +510,8 @@ export function fetchNodeHistory(id: string | number, query: HistoryQuery, signa
   const params = new URLSearchParams({ id: String(id), hours: String(hours) })
   const url = `/api/history/all?${params}`
   const cached = historyCache.get(url)
-  if (cached && Date.now() - cached.at < 15_000) return cached.promise
+  if (cached && Date.now() - cached.at < 15_000)
+    return cached.promise
   const promise = (async () => {
     for (let attempt = 0; ; attempt++) {
       await acquireHistorySlot(signal)
@@ -499,7 +526,8 @@ export function fetchNodeHistory(id: string | number, query: HistoryQuery, signa
         await delay(350 * 2 ** attempt, signal)
         continue
       }
-      if (!res.ok) throw await readError(res)
+      if (!res.ok)
+        throw await readError(res)
       const rows = await res.json()
       return historyFromRows(Array.isArray(rows) ? rows : [])
     }
@@ -516,7 +544,8 @@ const knownProbes = new Map<number, string>()
 export function rememberProbes(history: HubHistory): void {
   for (const [id, name] of Object.entries(history.probes)) {
     const numericId = Number(id)
-    if (Number.isFinite(numericId)) knownProbes.set(numericId, name)
+    if (Number.isFinite(numericId))
+      knownProbes.set(numericId, name)
   }
 }
 export function getKnownProbes(): Array<{ id: number, name: string }> {
@@ -526,29 +555,44 @@ export function getKnownProbes(): Array<{ id: number, name: string }> {
 const countryRegex = /^[A-Z]{2}$/
 export function countryToFlag(code: string | undefined): string {
   const cc = (code ?? '').trim().toUpperCase()
-  if (!countryRegex.test(cc)) return ''
+  if (!countryRegex.test(cc))
+    return ''
   return String.fromCodePoint(...Array.from(cc, ch => 0x1F1E6 + ch.charCodeAt(0) - 65))
 }
 const CURRENCY_SYMBOL: Record<string, string> = {
-  CNY: '¥', USD: '$', HKD: 'HK$', EUR: '€', GBP: '£', RUB: '₽', CHF: '₣',
-  INR: '₹', VND: '₫', THB: '฿', CAD: 'CA$',
+  CNY: '¥',
+  USD: '$',
+  HKD: 'HK$',
+  EUR: '€',
+  GBP: '£',
+  RUB: '₽',
+  CHF: '₣',
+  INR: '₹',
+  VND: '₫',
+  THB: '฿',
+  CAD: 'CA$',
 }
 export function currencySymbol(code: string | undefined): string {
   const cc = (code ?? '').trim().toUpperCase()
-  if (!cc) return '¥'
-  if (CURRENCY_SYMBOL_REGEX.test(code ?? '')) return code!
+  if (!cc)
+    return '¥'
+  if (CURRENCY_SYMBOL_REGEX.test(code ?? ''))
+    return code!
   return CURRENCY_SYMBOL[cc] ?? `${cc} `
 }
 const MONTH_CYCLE: Record<string, number> = { monthly: 1, quarterly: 3, semiannual: 6, yearly: 12, biennial: 24, triennial: 36 }
 export function billingCycleDays(cycle: string | undefined): number {
-  if (cycle === 'once') return -1
+  if (cycle === 'once')
+    return -1
   const months = MONTH_CYCLE[cycle || 'monthly'] ?? (Number((cycle || '').replace(MONTH_SUFFIX_REGEX, '')) || 1)
   return Math.round(months * 30.4375)
 }
 function expiryMoment(node: HubNode): string {
-  if (!node.expires_at) return ''
+  if (!node.expires_at)
+    return ''
   const date = str(node.expires_at)
-  if (!DATE_ONLY_REGEX.test(date)) return ''
+  if (!DATE_ONLY_REGEX.test(date))
+    return ''
   return new Date(`${date}T23:59:59`).toISOString()
 }
 
@@ -589,7 +633,8 @@ export function hubNodeToClient(node: HubNode): Client {
 }
 
 function usableMetrics(metrics: HubNode['metrics']): HubMetrics | null {
-  if (!metrics || typeof metrics !== 'object' || typeof metrics.cpu !== 'number') return null
+  if (!metrics || typeof metrics !== 'object' || typeof metrics.cpu !== 'number')
+    return null
   return metrics
 }
 export function hubNodeToStatus(node: HubNode): NodeStatus {
@@ -598,9 +643,10 @@ export function hubNodeToStatus(node: HubNode): NodeStatus {
   const lastSeen = num(node.last_seen)
   const ping: NonNullable<NodeStatus['ping']> = {}
   for (const [id, value] of Object.entries(metrics?.ping ?? {})) {
-    if (value === false) continue
+    if (value === false)
+      continue
     ping[id] = {
-      name: ({ '1': '电信', '2': '联通', '3': '移动', '4': 'BGP', '5': 'Node 1', '6': 'Node 2', '7': 'Node 3', '8': 'Node 4' } as Record<string, string>)[id] || `线路 ${id}`,
+      name: ({ 1: '电信', 2: '联通', 3: '移动', 4: 'BGP', 5: 'Node 1', 6: 'Node 2', 7: 'Node 3', 8: 'Node 4' } as Record<string, string>)[id] || `线路 ${id}`,
       latest: value === null ? -1 : num(value),
       avg: value === null ? -1 : num(value),
       tail: value === null ? -1 : num(value),
@@ -617,7 +663,8 @@ export function hubNodeToStatus(node: HubNode): NodeStatus {
     gpu: metrics?.gpu_info?.length ? num(metrics.gpu_info[0]?.info) : 0,
     gpu_count: metrics?.gpu_info?.length ?? 0,
     gpu_average_usage: metrics?.gpu_info?.length
-      ? metrics.gpu_info.reduce((sum, gpu) => sum + num(gpu.info), 0) / metrics.gpu_info.length : 0,
+      ? metrics.gpu_info.reduce((sum, gpu) => sum + num(gpu.info), 0) / metrics.gpu_info.length
+      : 0,
     gpu_detailed_info: metrics?.gpu_info?.map(gpu => ({ name: gpu.name, usage: gpu.info ?? undefined })),
     ram: num(metrics?.mem_used),
     ram_total: num(metrics?.mem_total, num(node.mem_total)),
@@ -649,12 +696,14 @@ export function snapshotToMaps(snapshot: HubSnapshot): { clients: Record<string,
   const clients: Record<string, Client> = {}
   const statuses: Record<string, NodeStatus> = {}
   for (const node of snapshot.nodes) {
-    if (!node || (typeof node.id !== 'number' && typeof node.id !== 'string')) continue
+    if (!node || (typeof node.id !== 'number' && typeof node.id !== 'string'))
+      continue
     try {
       const id = String(node.id)
       clients[id] = hubNodeToClient(node)
       statuses[id] = hubNodeToStatus(node)
-    } catch (error) {
+    }
+    catch (error) {
       console.warn('[cfsm] skipped malformed server', node, error)
     }
   }
@@ -675,17 +724,21 @@ export function openLiveSocket(handlers: LiveSocketHandlers): WebSocket {
   const socket = new WebSocket(url.toString())
   socket.addEventListener('open', () => {
     handlers.onOpen?.()
-    if (!detailId) socket.send(JSON.stringify({ type: 'subscribe', scope: 'all', ids: activeServerIds }))
+    if (!detailId)
+      socket.send(JSON.stringify({ type: 'subscribe', scope: 'all', ids: activeServerIds }))
   })
   socket.addEventListener('message', (event) => {
-    if (typeof event.data !== 'string') return
+    if (typeof event.data !== 'string')
+      return
     try {
       const message = JSON.parse(event.data)
-      if (message?.type !== 'batchUpdate' || !Array.isArray(message.updates)) return
+      if (message?.type !== 'batchUpdate' || !Array.isArray(message.updates))
+        return
       for (const update of message.updates) {
         const id = String(update.serverId)
         const current = lastRawServers.get(id)
-        if (!current) continue
+        if (!current)
+          continue
         for (const sample of update.samples ?? []) {
           const patch = sample.data || sample.payload || sample.metrics || {}
           Object.assign(current, patch)
@@ -696,8 +749,9 @@ export function openLiveSocket(handlers: LiveSocketHandlers): WebSocket {
         }
         lastRawServers.set(id, current)
       }
-      handlers.onSnapshot({ nodes: [...lastRawServers.values()].map(cfsmToHub) })
-    } catch (error) {
+      handlers.onSnapshot({ nodes: Array.from(lastRawServers.values(), cfsmToHub) })
+    }
+    catch (error) {
       console.warn('[cfsm] invalid websocket frame', error)
     }
   })
